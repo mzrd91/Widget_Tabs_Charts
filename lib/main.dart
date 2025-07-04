@@ -3,6 +3,7 @@ import 'models/staff_member.dart';
 import 'widgets/heat_map_chart.dart';
 import 'widgets/spider_chart.dart';
 import 'widgets/staff_worked_hours.dart';
+import 'screens/dashboard_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const StaffDashboard(),
+      home: const DashboardScreen(),
     );
   }
 }
