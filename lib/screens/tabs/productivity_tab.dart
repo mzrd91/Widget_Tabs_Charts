@@ -211,6 +211,18 @@ class _ProductivityTabState extends State<ProductivityTab> {
   }
 
   Widget _buildTasksChart(List<List<double>> tasksData, List<String> dateLabels) {
+    // Calculate the maximum total value for stacked bars
+    double maxStackedValue = 0;
+    for (int i = 0; i < _selectedRange; i++) {
+      double total = 0;
+      for (int d = 0; d < _departments.length; d++) {
+        total += tasksData[d][i];
+      }
+      if (total > maxStackedValue) {
+        maxStackedValue = total;
+      }
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -251,7 +263,7 @@ class _ProductivityTabState extends State<ProductivityTab> {
                   ),
                   borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey[300]!)),
                   minY: 0,
-                  maxY: 10,
+                  maxY: (maxStackedValue * 1.1).ceilToDouble(), // Add 10% padding
                   barGroups: List.generate(_selectedRange, (i) {
                     double runningTotal = 0;
                     List<BarChartRodStackItem> stacks = [];
@@ -276,22 +288,24 @@ class _ProductivityTabState extends State<ProductivityTab> {
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        double y = rod.toY;
-                        double fromY = 0;
-                        String dept = '';
-                        double value = 0;
-                        for (int d = 0; d < _departments.length; d++) {
-                          double toY = fromY + tasksData[d][group.x.toInt()];
-                          if (y <= toY) {
-                            dept = _departments[d];
-                            value = tasksData[d][group.x.toInt()];
-                            break;
-                          }
-                          fromY = toY;
-                        }
+                        int x = group.x.toInt();
                         return BarTooltipItem(
-                          '$dept\n${dateLabels[group.x.toInt()]}\n${value.toStringAsFixed(2)} tasks/hr',
-                          const TextStyle(color: Colors.white),
+                          '${dateLabels[x]}\n',
+                          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          children: [
+                            TextSpan(
+                              text: '${tasksData[0][x].toStringAsFixed(2)}\n',
+                              style: TextStyle(color: _deptColors[0]),
+                            ),
+                            TextSpan(
+                              text: '${tasksData[1][x].toStringAsFixed(2)}\n',
+                              style: TextStyle(color: _deptColors[1]),
+                            ),
+                            TextSpan(
+                              text: '${tasksData[2][x].toStringAsFixed(2)}',
+                              style: TextStyle(color: _deptColors[2]),
+                            ),
+                          ],
                         );
                       },
                     ),
