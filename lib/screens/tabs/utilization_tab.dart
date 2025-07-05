@@ -41,15 +41,16 @@ class UtilizationTab extends StatelessWidget {
             elevation: 4,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
                   const Text(
                     'FTE Coverage',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 16),
                   SizedBox(
-                    height: 200,
+                    height: 300,
                     child: SfRadialGauge(
                       axes: <RadialAxis>[
                         RadialAxis(
@@ -106,7 +107,7 @@ class UtilizationTab extends StatelessWidget {
                               widget: Text(
                                 '${fteCoverage.toStringAsFixed(1)}%',
                                 style: const TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 32,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

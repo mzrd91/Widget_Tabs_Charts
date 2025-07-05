@@ -15,6 +15,7 @@ dependencies:
   fl_chart: ^0.64.0
   syncfusion_flutter_gauges: ^24.1.41
   cupertino_icons: ^1.0.2
+  provider: ^6.0.5
 
 dev_dependencies:
   flutter_test:

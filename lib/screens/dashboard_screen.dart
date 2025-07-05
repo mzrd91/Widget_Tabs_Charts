@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_provider.dart';
 import '../models/staff_member.dart';
 import '../widgets/heat_map_chart.dart';
 import '../widgets/spider_chart.dart';
@@ -32,44 +34,78 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Hotel Staff Dashboard'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.analytics),
-              text: 'Utilization Metrics',
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              color: Colors.blue[700],
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Text(
+                    'Hotel Staff Dashboard',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    themeProvider.themeMode == ThemeMode.dark
+                        ? Icons.dark_mode
+                        : Icons.light_mode,
+                    color: Colors.white,
+                  ),
+                  Switch(
+                    value: themeProvider.themeMode == ThemeMode.dark,
+                    onChanged: (val) {
+                      themeProvider.toggleTheme(val);
+                    },
+                  ),
+                ],
+              ),
             ),
-            Tab(
-              icon: Icon(Icons.trending_up),
-              text: 'Productivity Metrics',
+            Material(
+              color: Theme.of(context).appBarTheme.backgroundColor ?? Colors.blue[700],
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: Colors.white,
+                indicatorWeight: 3,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                tabs: const [
+                  Tab(
+                    icon: Icon(Icons.analytics),
+                    text: 'Utilization Metrics',
+                  ),
+                  Tab(
+                    icon: Icon(Icons.trending_up),
+                    text: 'Productivity Metrics',
+                  ),
+                  Tab(
+                    icon: Icon(Icons.people),
+                    text: 'Staff Analysis',
+                  ),
+                ],
+              ),
             ),
-            Tab(
-              icon: Icon(Icons.people),
-              text: 'Staff Analysis',
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: const [
+                  UtilizationTab(),
+                  ProductivityTab(),
+                  StaffAnalysisTab(),
+                ],
+              ),
             ),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          UtilizationTab(),
-          ProductivityTab(),
-          StaffAnalysisTab(),
-        ],
       ),
     );
   }
