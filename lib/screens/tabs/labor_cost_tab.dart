@@ -344,12 +344,19 @@ class _LaborCostTabState extends State<LaborCostTab> {
   }
 
   Widget _buildOvertimeGaugeChart(double overtimePercentage) {
+    // Generate overtime hours data for the chart
+    List<double> overtimeHoursData = _generateOvertimeHoursData();
+    List<String> dateLabels = _dateLabels;
+    
+    // Calculate overtime percentage from chart data
+    double calculatedOvertimePercentage = _calculateOvertimePercentage(overtimeHoursData);
+    
     Color gaugeColor;
     String status;
-    if (overtimePercentage < 8) {
+    if (calculatedOvertimePercentage < 8) {
       gaugeColor = Colors.green;
       status = 'Good';
-    } else if (overtimePercentage < 12) {
+    } else if (calculatedOvertimePercentage < 12) {
       gaugeColor = Colors.orange;
       status = 'Warning';
     } else {
@@ -363,79 +370,172 @@ class _LaborCostTabState extends State<LaborCostTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Overtime Hours Percentage', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Center(
-              child: SizedBox(
-                height: 200,
-                width: 200,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey[200],
-                      ),
-                    ),
-                    SizedBox(
-                      width: 180,
-                      height: 180,
-                      child: CircularProgressIndicator(
-                        value: overtimePercentage / 20,
-                        strokeWidth: 15,
-                        backgroundColor: Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(gaugeColor),
-                      ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${overtimePercentage.toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: gaugeColor,
-                          ),
-                        ),
-                        Text(
-                          status,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: gaugeColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            const Text('Overtime Hours Analysis', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Column(
-                  children: [
-                    Container(width: 20, height: 20, decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
-                    const Text('Good\n<8%', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
-                  ],
+                // Left side: Overtime Hours Chart (70%)
+                Expanded(
+                  flex: 7,
+                  child: Column(
+                    children: [
+                      const Text('Daily Overtime Hours', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 200,
+                        child: BarChart(
+                          BarChartData(
+                            gridData: FlGridData(show: true, drawVerticalLine: false),
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, _) => Text('${value.toInt()}h', style: const TextStyle(fontSize: 10)),
+                                  reservedSize: 35,
+                                  interval: 10,
+                                ),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  interval: 1,
+                                  reservedSize: 30,
+                                  getTitlesWidget: (value, _) {
+                                    int idx = value.toInt();
+                                    if (idx >= 0 && idx < dateLabels.length) {
+                                      return Text(dateLabels[idx], style: const TextStyle(fontSize: 9));
+                                    }
+                                    return const Text('');
+                                  },
+                                ),
+                              ),
+                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            ),
+                            borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey[300]!)),
+                            minY: 0,
+                            maxY: overtimeHoursData.reduce((a, b) => a > b ? a : b) + 5,
+                            barGroups: List.generate(_selectedRange, (i) {
+                              double hours = overtimeHoursData[i];
+                              Color barColor = hours < 20 ? Colors.green : (hours < 30 ? Colors.orange : Colors.red);
+                              return BarChartGroupData(
+                                x: i,
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: hours,
+                                    color: barColor,
+                                    width: 15,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ],
+                              );
+                            }),
+                            barTouchData: BarTouchData(
+                              enabled: true,
+                              touchTooltipData: BarTouchTooltipData(
+                                tooltipBgColor: Colors.grey[300]!,
+                                tooltipRoundedRadius: 8,
+                                tooltipMargin: 8,
+                                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                  double hours = overtimeHoursData[group.x.toInt()];
+                                  return BarTooltipItem(
+                                    '${dateLabels[group.x.toInt()]}\n${hours.toStringAsFixed(1)} hours',
+                                    const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Column(
-                  children: [
-                    Container(width: 20, height: 20, decoration: BoxDecoration(color: Colors.orange, shape: BoxShape.circle)),
-                    const Text('Warning\n8-12%', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Container(width: 20, height: 20, decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-                    const Text('Critical\n>12%', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
-                  ],
+                const SizedBox(width: 16),
+                // Right side: Gauge Chart (30%)
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    children: [
+                      const Text('Current Percentage', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 200,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey[200],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 120,
+                              height: 120,
+                              child: CircularProgressIndicator(
+                                value: calculatedOvertimePercentage / 20,
+                                strokeWidth: 10,
+                                backgroundColor: Colors.grey[300],
+                                valueColor: AlwaysStoppedAnimation<Color>(gaugeColor),
+                              ),
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '${calculatedOvertimePercentage.toStringAsFixed(1)}%',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: gaugeColor,
+                                  ),
+                                ),
+                                Text(
+                                  status,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: gaugeColor,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                              const SizedBox(width: 4),
+                              const Text('Good <8%', style: TextStyle(fontSize: 9)),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.orange, shape: BoxShape.circle)),
+                              const SizedBox(width: 4),
+                              const Text('Warning 8-12%', style: TextStyle(fontSize: 9)),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+                              const SizedBox(width: 4),
+                              const Text('Critical >12%', style: TextStyle(fontSize: 9)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -443,5 +543,31 @@ class _LaborCostTabState extends State<LaborCostTab> {
         ),
       ),
     );
+  }
+
+  List<double> _generateOvertimeHoursData() {
+    final rand = Random(_selectedRange + 500);
+    return List.generate(_selectedRange, (i) {
+      double baseHours = 15 + (i * 0.5);
+      bool isWeekend = (DateTime.now().weekday - _selectedRange + i) % 7 >= 5;
+      baseHours += isWeekend ? 10 : 0;
+      return baseHours + rand.nextDouble() * 15;
+    });
+  }
+
+  double _calculateOvertimePercentage(List<double> overtimeHours) {
+    // Assumptions for calculation:
+    // - Standard work week: 40 hours per employee
+    // - Average 50 employees working
+    // - Overtime is hours worked beyond 40 hours per week
+    
+    double totalOvertimeHours = overtimeHours.reduce((a, b) => a + b);
+    double totalStandardHours = 40 * 50 * (_selectedRange / 7); // 40 hours × 50 employees × weeks
+    double totalWorkedHours = totalStandardHours + totalOvertimeHours;
+    
+    // Overtime percentage = (Overtime hours / Total worked hours) × 100
+    double overtimePercentage = (totalOvertimeHours / totalWorkedHours) * 100;
+    
+    return overtimePercentage;
   }
 }

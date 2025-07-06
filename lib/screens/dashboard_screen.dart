@@ -10,6 +10,7 @@ import 'tabs/productivity_tab.dart';
 import 'tabs/staff_analysis_tab.dart';
 import 'tabs/quality_tab.dart';
 import 'tabs/labor_cost_tab.dart';
+import 'tabs/engagement_tab.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -25,7 +26,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -101,6 +102,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                     icon: Icon(Icons.attach_money),
                     text: 'Labor Cost',
                   ),
+                  Tab(
+                    icon: Icon(Icons.psychology),
+                    text: 'Engagement',
+                  ),
                 ],
               ),
             ),
@@ -113,6 +118,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   StaffAnalysisTab(),
                   QualityTab(),
                   LaborCostTab(),
+                  EngagementTab(),
                 ],
               ),
             ),
