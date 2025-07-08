@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
+import '../../widgets/charts/heat_map.dart';
 
 class EngagementTab extends StatefulWidget {
   const EngagementTab({Key? key}) : super(key: key);
@@ -455,7 +456,12 @@ class _EngagementTabState extends State<EngagementTab> {
                       const SizedBox(height: 8),
                       SizedBox(
                         height: 300,
-                        child: _buildHeatMap(driversData),
+                        child: HeatMapWidget(
+                          data: driversData,
+                          rowTitles: _departments,
+                          colTitles: _engagementDrivers,
+                          title: 'Engagement Drivers',
+                        ),
                       ),
                     ],
                   ),
@@ -495,153 +501,6 @@ class _EngagementTabState extends State<EngagementTab> {
         ),
       ),
     );
-  }
-
-  Widget _buildHeatMap(List<List<double>> driversData) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          // Header row
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-            ),
-            child: Row(
-              children: [
-                _buildHeaderCell('Department', isFirst: true),
-                ..._engagementDrivers.map((driver) => _buildHeaderCell(driver)),
-              ],
-            ),
-          ),
-          // Data rows
-          ..._departments.asMap().entries.map((entry) {
-            final deptIdx = entry.key;
-            final deptName = entry.value;
-            final isLast = deptIdx == _departments.length - 1;
-            
-            return Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isLast ? Colors.transparent : Colors.grey[200]!,
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  _buildNameCell(deptName),
-                  ...List.generate(5, (driverIdx) {
-                    return _buildDataCell(
-                      driversData[deptIdx][driverIdx],
-                      driversData[deptIdx][driverIdx].toStringAsFixed(1),
-                      5.0,
-                    );
-                  }),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderCell(String text, {bool isFirst = false}) {
-    return Expanded(
-      child: Container(
-        height: 30,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          border: Border(
-            left: isFirst ? BorderSide.none : BorderSide(color: Colors.grey[300]!),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 8,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNameCell(String name) {
-    return Expanded(
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          border: Border(
-            right: BorderSide(color: Colors.grey[300]!),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            name,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 8,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDataCell(double value, String displayText, double maxValue) {
-    return Expanded(
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: _getHeatColor(value, maxValue),
-          border: Border(
-            right: BorderSide(color: Colors.grey[300]!),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            displayText,
-            style: const TextStyle(
-              color: Colors.black,
-              //fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Color _getHeatColor(double value, double maxValue) {
-    if (value < 3.0) {
-      return Colors.red[600]!;
-    } else if (value >= 3.0 && value < 4.2) {
-      return Colors.yellow[600]!;
-    } else {
-      return Colors.green[600]!;
-    }
   }
 
   Widget _buildBreakTimeComplianceChart(List<double> breakTimeData) {

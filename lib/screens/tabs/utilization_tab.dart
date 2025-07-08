@@ -1,27 +1,111 @@
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_gauges/gauges.dart';
+import '../../widgets/charts/charts.dart';
 
-class UtilizationTab extends StatelessWidget {
+class UtilizationTab extends StatefulWidget {
   const UtilizationTab({Key? key}) : super(key: key);
 
-  Color _getThresholdColor(double value) {
-    if (value > 95) return Colors.green[600]!;
-    if (value >= 90) return Colors.amber[700]!;
-    return Colors.red[600]!;
+  @override
+  State<UtilizationTab> createState() => _UtilizationTabState();
+}
+
+class _UtilizationTabState extends State<UtilizationTab> {
+  // Data variables - will be loaded from backend in the future
+  double fteCoverage = 13.0;
+  double scheduleAdherence = 98.0;
+  double taskOccupancy = 94.0;
+  
+  // State management variables for future backend integration
+  bool isLoading = false;
+  String? errorMessage;
+  
+  // Filter variables for future features
+  String selectedTimeRange = 'Last 30 Days';
+  String selectedDepartment = 'All Departments';
+  
+  final List<String> timeRanges = [
+    'Last 7 Days',
+    'Last 30 Days', 
+    'Last 90 Days',
+    'Last 6 Months',
+    'Last Year'
+  ];
+  
+  final List<String> departments = [
+    'All Departments',
+    'Housekeeping',
+    'Front Desk',
+    'F&B',
+    'Maintenance'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Future: Load initial data from backend
+    // _loadUtilizationData();
+  }
+
+  // Future method for backend integration
+  Future<void> _loadUtilizationData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      // Future: Replace with actual API calls
+      // final data = await ApiService.getUtilizationData(
+      //   timeRange: selectedTimeRange,
+      //   department: selectedDepartment,
+      // );
+      
+      // Simulate API delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Future: Update with real data
+      // setState(() {
+      //   fteCoverage = data.fteCoverage;
+      //   scheduleAdherence = data.scheduleAdherence;
+      //   taskOccupancy = data.taskOccupancy;
+      // });
+      
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Failed to load data: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _onTimeRangeChanged(String? newValue) {
+    if (newValue != null) {
+      setState(() {
+        selectedTimeRange = newValue;
+      });
+      _loadUtilizationData(); // Reload data with new filter
+    }
+  }
+
+  void _onDepartmentChanged(String? newValue) {
+    if (newValue != null) {
+      setState(() {
+        selectedDepartment = newValue;
+      });
+      _loadUtilizationData(); // Reload data with new filter
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Example values from screenshots
-    final double fteCoverage = 13.0;
-    final double scheduleAdherence = 98.0;
-    final double taskOccupancy = 94.0;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header with title and description
           Text(
             'Utilization Metrics',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -36,197 +120,153 @@ class UtilizationTab extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // FTE Coverage (Half Radial Gauge)
+          // Filters section - for future backend integration
           Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 2,
             child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 children: [
-                  const Text(
-                    'FTE Coverage',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 300,
-                    child: SfRadialGauge(
-                      axes: <RadialAxis>[
-                        RadialAxis(
-                          minimum: 0,
-                          maximum: 100,
-                          startAngle: 180,
-                          endAngle: 0,
-                          showTicks: true,
-                          showLabels: true,
-                          axisLineStyle: const AxisLineStyle(
-                            thickness: 0.1,
-                            thicknessUnit: GaugeSizeUnit.factor,
-                            color: Colors.transparent,
+                  // Time Range Filter
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Time Range',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: selectedTimeRange,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
-                          ranges: <GaugeRange>[
-                            GaugeRange(
-                              startValue: 0,
-                              endValue: 90,
-                              color: Colors.red,
-                              startWidth: 15.0,
-                              endWidth: 15.0,
-                              rangeOffset: 0,
-                            ),
-                            GaugeRange(
-                              startValue: 90,
-                              endValue: 95,
-                              color: Colors.amber,
-                              startWidth: 15,
-                              endWidth: 15,
-                              rangeOffset: 0,
-                            ),
-                            GaugeRange(
-                              startValue: 95,
-                              endValue: 100,
-                              color: Colors.green,
-                                startWidth: 15,
-                              endWidth: 15,
-                              rangeOffset: 0,
-                            ),
-                          ],
-                          pointers: <GaugePointer>[
-                            NeedlePointer(
-                              value: fteCoverage,
-                              needleColor: Colors.black87,
-                              knobStyle: const KnobStyle(
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                          annotations: <GaugeAnnotation>[
-                            GaugeAnnotation(
-                              angle: 90,
-                              positionFactor: 0.7,
-                              widget: Text(
-                                '${fteCoverage.toStringAsFixed(1)}%',
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+                          items: timeRanges.map((range) {
+                            return DropdownMenuItem<String>(
+                              value: range,
+                              child: Text(range),
+                            );
+                          }).toList(),
+                          onChanged: _onTimeRangeChanged,
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Schedule Adherence (Horizontal Bar)
-          Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Schedule Adherence',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  SfLinearGauge(
-                    minimum: 0.0,
-                    maximum: 100.0,
-                    showTicks: false,
-                    showLabels: false,
-                    axisTrackStyle: const LinearAxisTrackStyle(
-                      thickness: 16,
-                      edgeStyle: LinearEdgeStyle.bothCurve,
-                      color: Color(0xFFE0E0E0),
+                  const SizedBox(width: 16),
+                  // Department Filter
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Department',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: selectedDepartment,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          items: departments.map((dept) {
+                            return DropdownMenuItem<String>(
+                              value: dept,
+                              child: Text(dept),
+                            );
+                          }).toList(),
+                          onChanged: _onDepartmentChanged,
+                        ),
+                      ],
                     ),
-                    barPointers: [
-                      LinearBarPointer(
-                        value: scheduleAdherence,
-                        thickness: 16,
-                        color: _getThresholdColor(scheduleAdherence),
-                        edgeStyle: LinearEdgeStyle.bothCurve,
+                  ),
+                  const SizedBox(width: 16),
+                  // Refresh Button
+                  Column(
+                    children: [
+                      const SizedBox(height: 24), // Align with dropdowns
+                      IconButton(
+                        onPressed: isLoading ? null : _loadUtilizationData,
+                        icon: isLoading 
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh),
+                        tooltip: 'Refresh Data',
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${scheduleAdherence.toStringAsFixed(1)}%',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
                 ],
               ),
             ),
           ),
-
           const SizedBox(height: 24),
 
-          // Task Occupancy Rate (Donut/Circular Gauge)
-          Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
+          // Error message display
+          if (errorMessage != null) ...[
+            Card(
+              color: Colors.red[50],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.error, color: Colors.red[600]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        errorMessage!,
+                        style: TextStyle(color: Colors.red[700]),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => errorMessage = null),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Charts section
+          if (isLoading) ...[
+            const Center(
               child: Column(
                 children: [
-                  const Text(
-                    'Task Occupancy Rate',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(
-                    height: 200,
-                    child: SfRadialGauge(
-                      axes: <RadialAxis>[
-                        RadialAxis(
-                          minimum: 0,
-                          maximum: 100,
-                          startAngle: 270,
-                          endAngle: 270,
-                          showTicks: false,
-                          showLabels: false,
-                          axisLineStyle: AxisLineStyle(
-                            thickness: 0.2,
-                            thicknessUnit: GaugeSizeUnit.factor,
-                            color: const Color(0xFFE0E0E0),
-                          ),
-                          pointers: <GaugePointer>[
-                            RangePointer(
-                              value: taskOccupancy,
-                              width: 0.2,
-                              sizeUnit: GaugeSizeUnit.factor,
-                              color: _getThresholdColor(taskOccupancy),
-                              cornerStyle: CornerStyle.bothCurve,
-                            ),
-                          ],
-                          annotations: <GaugeAnnotation>[
-                            GaugeAnnotation(
-                              angle: 90,
-                              positionFactor: 0.0,
-                              widget: Text(
-                                '${taskOccupancy.toStringAsFixed(1)}%',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading utilization data...'),
                 ],
               ),
             ),
-          ),
+          ] else ...[
+            // FTE Coverage (Half Radial Gauge)
+            GaugeWidget(
+              value: fteCoverage,
+              title: 'FTE Coverage',
+            ),
+
+            const SizedBox(height: 24),
+
+            // Schedule Adherence (Horizontal Bar)
+            BulletGaugeWidget(
+              value: scheduleAdherence,
+              title: 'Schedule Adherence',
+            ),
+
+            const SizedBox(height: 24),
+
+            // Task Occupancy Rate (Donut/Circular Gauge)
+            RateDonutWidget(
+              value: taskOccupancy,
+              title: 'Task Occupancy Rate',
+            ),
+          ],
         ],
       ),
     );
