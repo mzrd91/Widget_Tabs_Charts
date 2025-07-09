@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme/theme_provider.dart';
 import 'models/staff_member.dart';
-import 'widgets/heat_map_chart.dart';
-import 'widgets/spider_chart.dart';
+import 'widgets/charts/charts.dart';
+import 'widgets/charts/heat_map.dart';
 import 'widgets/staff_worked_hours.dart';
 import 'screens/dashboard_screen.dart';
 
@@ -361,7 +361,36 @@ class _StaffDashboardState extends State<StaffDashboard> {
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 400,
-                        child: HeatMapChart(staff: _staff),
+                        child: HeatMapWidget(
+                          data: _staff.map((s) => [
+                            s.customerSatisfactionRate,
+                            s.evaluationRate,
+                            s.weeklyHours.toDouble(),
+                          ]).toList(),
+                          rowTitles: _staff.map((s) => s.name.split(' ').first).toList(),
+                          colTitles: ['Customer Satisfaction', 'Evaluation Rate', 'Weekly Hours'],
+                          title: 'Staff Performance Overview',
+                          thresholds: [
+                            const HeatMapThreshold(
+                              columnIndex: 0,
+                              lowThreshold: 6.0,
+                              mediumThreshold: 7.5,
+                              highThreshold: 8.5,
+                            ),
+                            const HeatMapThreshold(
+                              columnIndex: 1,
+                              lowThreshold: 7.0,
+                              mediumThreshold: 8.0,
+                              highThreshold: 9.0,
+                            ),
+                            const HeatMapThreshold(
+                              columnIndex: 2,
+                              lowThreshold: 25.0,
+                              mediumThreshold: 37.0,
+                              highThreshold: 40.0,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -398,9 +427,27 @@ class _StaffDashboardState extends State<StaffDashboard> {
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 400,
-                        child: SpiderChart(
-                          staff: _staff,
-                          selectedStaffIds: _selectedStaffIds,
+                        child: RadarChartWidget(
+                          data: _selectedStaffIds.isEmpty ? [] : _selectedStaffIds.map((staffId) {
+                            final staff = _staff.firstWhere((s) => s.id == staffId);
+                            return [
+                              staff.customerSatisfactionRate,
+                              staff.evaluationRate,
+                              (staff.weeklyHours.toDouble() / 50.0) * 10.0,
+                            ];
+                          }).toList(),
+                          labels: ['Customer Satisfaction', 'Evaluation Rate', 'Weekly Hours'],
+                          legendLabels: _selectedStaffIds.isEmpty ? [] : _selectedStaffIds.map((id) {
+                            return _staff.firstWhere((s) => s.id == id).name;
+                          }).toList(),
+                          colors: [
+                            Colors.blue,
+                            Colors.green,
+                            Colors.orange,
+                            Colors.purple,
+                            Colors.red,
+                          ],
+                          title: 'Staff Comparison',
                         ),
                       ),
                     ],

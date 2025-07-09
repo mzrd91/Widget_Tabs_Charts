@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/staff_member.dart';
-import '../../widgets/heat_map_chart.dart';
-import '../../widgets/spider_chart.dart';
-import '../../widgets/staff_worked_hours.dart';
+import '../../widgets/charts/charts.dart';
+import '../../widgets/charts/heat_map.dart';
 
 class StaffAnalysisTab extends StatefulWidget {
   const StaffAnalysisTab({Key? key}) : super(key: key);
@@ -37,6 +36,46 @@ class _StaffAnalysisTabState extends State<StaffAnalysisTab> {
     return _staff.where((member) =>
         member.name.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
   }
+
+  // Data preparation for charts - Swapped axes
+  List<List<double>> get _heatMapData {
+    return _staff.map((s) => [
+      s.customerSatisfactionRate,
+      s.evaluationRate,
+      s.weeklyHours.toDouble(),
+    ]).toList();
+  }
+
+  List<String> get _heatMapRowTitles => _staff.map((s) => s.name.split(' ').first).toList();
+  List<String> get _heatMapColTitles => ['Customer Satisfaction', 'Evaluation Rate', 'Weekly Hours'];
+
+  List<List<double>> get _radarChartData {
+    if (_selectedStaffIds.isEmpty) return [];
+    
+    return _selectedStaffIds.map((staffId) {
+      final staff = _staff.firstWhere((s) => s.id == staffId);
+      return [
+        staff.customerSatisfactionRate, // Already 0-10 scale
+        staff.evaluationRate, // Already 0-10 scale
+        (staff.weeklyHours.toDouble() / 50.0) * 10.0, // Normalize hours to 0-10 scale
+      ];
+    }).toList();
+  }
+
+  List<String> get _radarChartLabels => ['Customer Satisfaction (0-10)', 'Evaluation Rate (0-10)', 'Weekly Hours (0-50h)'];
+  List<String> get _radarChartLegendLabels => _selectedStaffIds.map((id) {
+    return _staff.firstWhere((s) => s.id == id).name;
+  }).toList();
+  List<Color> get _radarChartColors => [
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+    Colors.red,
+  ];
+
+  List<double> get _barChartData => _staff.map((s) => s.weeklyHours.toDouble()).toList();
+  List<String> get _barChartLabels => _staff.map((s) => s.name.split(' ').first).toList();
 
   @override
   void dispose() {
@@ -292,117 +331,101 @@ class _StaffAnalysisTabState extends State<StaffAnalysisTab> {
   Widget _buildChartsSection() {
     return Column(
       children: [
-        // First row: Heat Map and Spider Chart
+        // First row: Heat Map and Radar Chart
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Heat Map
             Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.grid_view, color: Colors.orange[700]),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Performance Heat Map',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 400,
-                        child: HeatMapChart(staff: _staff),
-                      ),
-                    ],
+              child: HeatMapWidget(
+                data: _heatMapData,
+                rowTitles: _heatMapRowTitles,
+                colTitles: _heatMapColTitles,
+                title: 'Staff Performance Overview',
+                thresholds: [
+                  // Customer Satisfaction (0-10 scale)
+                  const HeatMapThreshold(
+                    columnIndex: 0,
+                    lowThreshold: 6.0,    // Red: Poor satisfaction
+                    mediumThreshold: 7.5, // Orange: Below average
+                    highThreshold: 8.5,   // Yellow: Good
                   ),
-                ),
+                  // Evaluation Rate (0-10 scale)
+                  const HeatMapThreshold(
+                    columnIndex: 1,
+                    lowThreshold: 7.0,    // Red: Poor evaluation
+                    mediumThreshold: 8.0, // Orange: Below average
+                    highThreshold: 9.0,   // Yellow: Good
+                  ),
+                  // Weekly Hours (0-50+ scale)
+                  const HeatMapThreshold(
+                    columnIndex: 2,
+                    lowThreshold: 25.0,   // Red: Part-time
+                    mediumThreshold: 37.0, // Orange: Below full-time
+                    highThreshold: 40.0,  // Yellow: Full-time
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 16),
-            // Spider Chart
+            // Radar Chart
             Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+              child: _selectedStaffIds.isEmpty
+                ? Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.radar, color: Colors.green[700]),
-                          const SizedBox(width: 8),
                           Text(
                             'Staff Comparison',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green[700],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 400,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.radar, size: 64, color: Colors.grey[400]),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Select staff from table to compare',
+                                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '(${_selectedStaffIds.length} selected)',
+                                    style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Select staff from table to compare (${_selectedStaffIds.length} selected)',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 400,
-                        child: SpiderChart(
-                          staff: _staff,
-                          selectedStaffIds: _selectedStaffIds,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
+                  )
+                                 : RadarChartWidget(
+                     data: _radarChartData,
+                     labels: _radarChartLabels,
+                     legendLabels: _radarChartLegendLabels,
+                     colors: _radarChartColors.take(_selectedStaffIds.length).toList(),
+                     title: 'Staff Comparison (${_selectedStaffIds.length} selected)',
+                   ),
             ),
           ],
         ),
         const SizedBox(height: 16),
         // Second row: Worked Hours Bar Chart
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.bar_chart, color: Colors.purple[700]),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Weekly Worked Hours',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple[700],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Staff hours comparison - Green: 40+ hours, Orange: 35-39 hours, Red: <35 hours',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 300,
-                  child: StaffWorkedHours(staff: _staff),
-                ),
-              ],
-            ),
-          ),
+        BarChartWidget(
+          data: _barChartData,
+          labels: _barChartLabels,
+          title: 'Weekly Worked Hours',
+          minY: 0,
+          maxY: 50,
+          barColor: Colors.green[600], // All bars green
         ),
       ],
     );
