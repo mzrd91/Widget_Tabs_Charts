@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-class RadarChartWidget extends StatefulWidget {
+class RadarChartCustomWidget extends StatefulWidget {
   final List<List<double>> data;
   final List<String> labels;
   final List<String> legendLabels;
@@ -10,7 +10,11 @@ class RadarChartWidget extends StatefulWidget {
   final double maxValue;
   final int tickCount;
 
-  const RadarChartWidget({
+  final TextStyle? titleStyle;
+  final TextStyle? tickTextStyle;
+  final Widget Function(String label, Color color)? legendItemBuilder;
+
+  const RadarChartCustomWidget({
     Key? key,
     required this.data,
     required this.labels,
@@ -19,159 +23,16 @@ class RadarChartWidget extends StatefulWidget {
     required this.title,
     this.maxValue = 10.0,
     this.tickCount = 5,
+    this.titleStyle,
+    this.tickTextStyle,
+    this.legendItemBuilder,
   }) : super(key: key);
 
   @override
-  State<RadarChartWidget> createState() => _RadarChartWidgetState();
+  State<RadarChartCustomWidget> createState() => _RadarChartCustomWidgetState();
 }
 
-class _RadarChartWidgetState extends State<RadarChartWidget> {
-  bool isLoading = false;
-  String? errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    // Future: Initialize data loading
-    // _loadChartData();
-  }
-
-  // Future method for backend integration
-  Future<void> _loadChartData() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
-    try {
-      // Future: Replace with actual API calls
-      // final data = await ApiService.getRadarChartData();
-
-      // Simulate API delay
-      await Future.delayed(const Duration(milliseconds: 300));
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Failed to load chart data: ${e.toString()}';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Error message
-            if (errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.red[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error, color: Colors.red[600], size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        errorMessage!,
-                        style: TextStyle(color: Colors.red[700], fontSize: 12),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() => errorMessage = null),
-                      icon: const Icon(Icons.close, size: 16),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            // Loading state
-            if (isLoading) ...[
-              SizedBox(
-                height: 400,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text('Loading chart data...', style: TextStyle(color: Colors.grey[600])),
-                    ],
-                  ),
-                ),
-              ),
-            ] else ...[
-              // Chart content
-              SizedBox(
-                height: 400,
-                child: RadarChart(
-                  RadarChartData(
-                    dataSets: _buildDataSets(),
-                    titleTextStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                    titlePositionPercentageOffset: 0.2,
-                    tickCount: widget.tickCount,
-                    ticksTextStyle: const TextStyle(fontSize: 8),
-                    getTitle: (index, angle) {
-                      return RadarChartTitle(
-                        text: widget.labels[index],
-                        angle: angle,
-                      );
-                    },
-                    tickBorderData: const BorderSide(color: Colors.grey, width: 1),
-                    borderData: FlBorderData(show: false),
-                    gridBorderData: const BorderSide(color: Colors.grey, width: 1),
-                    radarBorderData: const BorderSide(color: Colors.transparent),
-                    radarTouchData: RadarTouchData(enabled: true),
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                for (int i = 0; i < widget.legendLabels.length; i++) ...[
-                  Container(width: 16, height: 4, color: widget.colors[i]),
-                  const SizedBox(width: 4),
-                  Text(widget.legendLabels[i]),
-                  const SizedBox(width: 16),
-                ]
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+class _RadarChartCustomWidgetState extends State<RadarChartCustomWidget> {
   List<RadarDataSet> _buildDataSets() {
     return List.generate(widget.data.length, (index) {
       return RadarDataSet(
@@ -184,5 +45,133 @@ class _RadarChartWidgetState extends State<RadarChartWidget> {
         borderWidth: 2,
       );
     });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.title,
+              style: widget.titleStyle ?? const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 400,
+              child: RadarChart(
+                RadarChartData(
+                  dataSets: _buildDataSets(),
+                  titleTextStyle: widget.titleStyle ?? const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  titlePositionPercentageOffset: 0.2,
+                  tickCount: widget.tickCount,
+                  ticksTextStyle: widget.tickTextStyle ?? const TextStyle(fontSize: 8),
+                  getTitle: (index, angle) {
+                    return RadarChartTitle(
+                      text: widget.labels[index],
+                      angle: angle,
+                    );
+                  },
+                  tickBorderData: const BorderSide(color: Colors.grey, width: 1),
+                  borderData: FlBorderData(show: false),
+                  gridBorderData: const BorderSide(color: Colors.grey, width: 1),
+                  radarBorderData: const BorderSide(color: Colors.transparent),
+                  radarTouchData: RadarTouchData(enabled: true),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildResponsiveLegend(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResponsiveLegend() {
+    // Calculate how many items can fit per row based on screen width
+    final screenWidth = MediaQuery.of(context).size.width;
+    final itemWidth = widget.legendLabels.length > 6 ? 80.0 : 120.0; // Smaller items when more staff
+    final itemsPerRow = (screenWidth / itemWidth).floor().clamp(1, 4); // Max 4 items per row
+    
+    // Split legend items into rows
+    final rows = <List<int>>[];
+    for (int i = 0; i < widget.legendLabels.length; i += itemsPerRow) {
+      rows.add(List.generate(
+        (i + itemsPerRow < widget.legendLabels.length) ? itemsPerRow : widget.legendLabels.length - i,
+        (j) => i + j,
+      ));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Show total count when many staff are selected
+        if (widget.legendLabels.length > 6)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              '${widget.legendLabels.length} staff members selected',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ...rows.map((rowIndices) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: rowIndices.map((index) {
+                return Expanded(
+                  child: widget.legendItemBuilder?.call(widget.legendLabels[index], widget.colors[index]) ??
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: widget.colors[index],
+                              borderRadius: BorderRadius.circular(1),
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              _getDisplayName(widget.legendLabels[index]),
+                              style: TextStyle(
+                                fontSize: widget.legendLabels.length > 6 ? 9 : 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                      ),
+                );
+              }).toList(),
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  String _getDisplayName(String fullName) {
+    // For many staff members, show abbreviated names
+    if (widget.legendLabels.length > 6) {
+      final parts = fullName.split(' ');
+      if (parts.length >= 2) {
+        return '${parts[0][0]}. ${parts[1]}'; // First initial + last name
+      }
+      return fullName.length > 12 ? '${fullName.substring(0, 10)}...' : fullName;
+    }
+    return fullName;
   }
 }

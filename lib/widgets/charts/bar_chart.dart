@@ -28,40 +28,6 @@ class BarChartWidget extends StatefulWidget {
 }
 
 class _BarChartWidgetState extends State<BarChartWidget> {
-  bool isLoading = false;
-  String? errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    // Future: Initialize data loading
-    // _loadChartData();
-  }
-
-  // Future method for backend integration
-  Future<void> _loadChartData() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
-    try {
-      // Future: Replace with actual API calls
-      // final data = await ApiService.getBarChartData();
-
-      // Simulate API delay
-      await Future.delayed(const Duration(milliseconds: 300));
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Failed to load chart data: ${e.toString()}';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
   Color _getBarColor(int index, double value) {
     if (widget.barColors != null && index < widget.barColors!.length) {
       return widget.barColors![index];
@@ -83,114 +49,53 @@ class _BarChartWidgetState extends State<BarChartWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
-            ),
+            Text(widget.title, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-
-            // Error message
-            if (errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.red[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error, color: Colors.red[600], size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        errorMessage!,
-                        style: TextStyle(color: Colors.red[700], fontSize: 12),
+            SizedBox(
+              height: 300,
+              child: BarChart(
+                BarChartData(
+                  gridData: FlGridData(show: true, drawVerticalLine: false),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, _) => Text(
+                          '${value.toInt()}h',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                        reservedSize: 40,
+                        interval: 10,
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => setState(() => errorMessage = null),
-                      icon: const Icon(Icons.close, size: 16),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, _) {
+                          int idx = value.toInt();
+                          if (idx >= 0 && idx < widget.labels.length) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                widget.labels[idx],
+                                style: const TextStyle(fontSize: 10),
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          }
+                          return const Text('');
+                        },
+                        reservedSize: 60,
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            ],
-
-            // Loading state
-            if (isLoading) ...[
-              SizedBox(
-                height: 300,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text('Loading chart data...', style: TextStyle(color: Colors.grey[600])),
-                    ],
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
-                ),
-              ),
-            ] else ...[
-              // Chart content
-              SizedBox(
-                height: 300,
-                child: BarChart(
-                  BarChartData(
-                    gridData: FlGridData(show: true, drawVerticalLine: false),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, _) => Text(
-                            '${value.toInt()}h',
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                          reservedSize: 40,
-                          interval: 10,
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, _) {
-                            int idx = value.toInt();
-                            if (idx >= 0 && idx < widget.labels.length) {
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(
-                                  widget.labels[idx],
-                                  style: const TextStyle(fontSize: 10),
-                                  textAlign: TextAlign.center,
-                                ),
-                              );
-                            }
-                            return const Text('');
-                          },
-                          reservedSize: 60,
-                        ),
-                      ),
-                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey[300]!)),
-                    minY: widget.minY,
-                    maxY: widget.maxY,
-                    barGroups: _buildBarGroups(),
-                                      extraLinesData: ExtraLinesData(
+                  borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey[300]!)),
+                  minY: widget.minY,
+                  maxY: widget.maxY,
+                  barGroups: _buildBarGroups(),
+                  extraLinesData: ExtraLinesData(
                     horizontalLines: [
                       // 25h Part-time line
                       HorizontalLine(
@@ -230,22 +135,21 @@ class _BarChartWidgetState extends State<BarChartWidget> {
                       ),
                     ],
                   ),
-                    barTouchData: BarTouchData(
-                      enabled: true,
-                      touchTooltipData: BarTouchTooltipData(
-                        tooltipBgColor: Colors.blue[700]!,
-                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                          return BarTooltipItem(
-                            '${widget.labels[group.x.toInt()]}\n${widget.data[group.x.toInt()].toStringAsFixed(1)} hours',
-                            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          );
-                        },
-                      ),
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipBgColor: Colors.blue[700]!,
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        return BarTooltipItem(
+                          '${widget.labels[group.x.toInt()]}\n${widget.data[group.x.toInt()].toStringAsFixed(1)} hours',
+                          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        );
+                      },
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
             const SizedBox(height: 8),
             Row(
               children: [

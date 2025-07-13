@@ -36,40 +36,6 @@ class GaugeWidget extends StatefulWidget {
 }
 
 class _GaugeWidgetState extends State<GaugeWidget> {
-  bool isLoading = false;
-  String? errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    // Future: Initialize data loading
-    // _loadChartData();
-  }
-
-  // Future method for backend integration
-  Future<void> _loadChartData() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
-    try {
-      // Future: Replace with actual API calls
-      // final data = await ApiService.getGaugeData();
-
-      // Simulate API delay
-      await Future.delayed(const Duration(milliseconds: 300));
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Failed to load chart data: ${e.toString()}';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
   Color _getThresholdColor(double value) {
     if (value > 95) return Colors.green[600]!;
     if (value >= 90) return Colors.amber[700]!;
@@ -114,118 +80,54 @@ class _GaugeWidgetState extends State<GaugeWidget> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: widget.titleStyle ?? const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
+            Text(
+              widget.title,
+              style: widget.titleStyle ?? const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-
-            // Error message
-            if (errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.red[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error, color: Colors.red[600], size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        errorMessage!,
-                        style: TextStyle(color: Colors.red[700], fontSize: 12),
+            SizedBox(
+              height: widget.height,
+              child: SfRadialGauge(
+                axes: <RadialAxis>[
+                  RadialAxis(
+                    minimum: widget.minValue,
+                    maximum: widget.maxValue,
+                    startAngle: widget.startAngle,
+                    endAngle: widget.endAngle,
+                    showTicks: true,
+                    showLabels: true,
+                    axisLineStyle: const AxisLineStyle(
+                      thickness: 0.1,
+                      thicknessUnit: GaugeSizeUnit.factor,
+                      color: Colors.transparent,
+                    ),
+                    ranges: widget.ranges ?? _getDefaultRanges(),
+                    pointers: <GaugePointer>[
+                      NeedlePointer(
+                        value: widget.value,
+                        needleColor: widget.needleColor ?? Colors.black87,
+                        knobStyle: KnobStyle(
+                          color: widget.knobColor ?? Colors.black87,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() => errorMessage = null),
-                      icon: const Icon(Icons.close, size: 16),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 8),
-
-            // Loading state
-            if (isLoading) ...[
-              SizedBox(
-                height: widget.height,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text('Loading chart data...', style: TextStyle(color: Colors.grey[600])),
+                    ],
+                    annotations: <GaugeAnnotation>[
+                      GaugeAnnotation(
+                        angle: 90,
+                        positionFactor: 0.7,
+                        widget: Text(
+                          '${widget.value.toStringAsFixed(1)}%',
+                          style: widget.valueStyle ?? const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+                ],
               ),
-            ] else ...[
-              // Chart content
-              SizedBox(
-                height: widget.height,
-                child: SfRadialGauge(
-                  axes: <RadialAxis>[
-                    RadialAxis(
-                      minimum: widget.minValue,
-                      maximum: widget.maxValue,
-                      startAngle: widget.startAngle,
-                      endAngle: widget.endAngle,
-                      showTicks: true,
-                      showLabels: true,
-                      axisLineStyle: const AxisLineStyle(
-                        thickness: 0.1,
-                        thicknessUnit: GaugeSizeUnit.factor,
-                        color: Colors.transparent,
-                      ),
-                      ranges: widget.ranges ?? _getDefaultRanges(),
-                      pointers: <GaugePointer>[
-                        NeedlePointer(
-                          value: widget.value,
-                          needleColor: widget.needleColor ?? Colors.black87,
-                          knobStyle: KnobStyle(
-                            color: widget.knobColor ?? Colors.black87,
-                          ),
-                        ),
-                      ],
-                      annotations: <GaugeAnnotation>[
-                        GaugeAnnotation(
-                          angle: 90,
-                          positionFactor: 0.7,
-                          widget: Text(
-                            '${widget.value.toStringAsFixed(1)}%',
-                            style: widget.valueStyle ?? const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ],
         ),
       ),

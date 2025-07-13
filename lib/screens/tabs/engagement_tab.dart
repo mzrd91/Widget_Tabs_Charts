@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
-import '../../widgets/charts/heat_map.dart';
+import '../../widgets/charts/heat_map2.dart' show CustomHeatMapWidget;
 
 class EngagementTab extends StatefulWidget {
   const EngagementTab({Key? key}) : super(key: key);
@@ -456,11 +456,13 @@ class _EngagementTabState extends State<EngagementTab> {
                       const SizedBox(height: 8),
                       SizedBox(
                         height: 300,
-                        child: HeatMapWidget(
+                        child: CustomHeatMapWidget(
                           data: driversData,
-                          rowTitles: _departments,
-                          colTitles: _engagementDrivers,
+                          dateLabels: _departments,
                           title: 'Engagement Drivers',
+                          xAxisLabel: 'Driver',
+                          yAxisLabel: 'Department',
+                          height: 300,
                         ),
                       ),
                     ],

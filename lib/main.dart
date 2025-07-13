@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'theme/theme_provider.dart';
 import 'models/staff_member.dart';
 import 'widgets/charts/charts.dart';
-import 'widgets/charts/heat_map.dart';
+import 'widgets/charts/heat_map2.dart' show CustomHeatMapWidget;
 import 'widgets/staff_worked_hours.dart';
 import 'screens/dashboard_screen.dart';
 
@@ -361,35 +361,16 @@ class _StaffDashboardState extends State<StaffDashboard> {
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 400,
-                        child: HeatMapWidget(
+                        child: CustomHeatMapWidget(
                           data: _staff.map((s) => [
                             s.customerSatisfactionRate,
                             s.evaluationRate,
                             s.weeklyHours.toDouble(),
                           ]).toList(),
-                          rowTitles: _staff.map((s) => s.name.split(' ').first).toList(),
-                          colTitles: ['Customer Satisfaction', 'Evaluation Rate', 'Weekly Hours'],
+                          dateLabels: _staff.map((s) => s.name.split(' ').first).toList(),
                           title: 'Staff Performance Overview',
-                          thresholds: [
-                            const HeatMapThreshold(
-                              columnIndex: 0,
-                              lowThreshold: 6.0,
-                              mediumThreshold: 7.5,
-                              highThreshold: 8.5,
-                            ),
-                            const HeatMapThreshold(
-                              columnIndex: 1,
-                              lowThreshold: 7.0,
-                              mediumThreshold: 8.0,
-                              highThreshold: 9.0,
-                            ),
-                            const HeatMapThreshold(
-                              columnIndex: 2,
-                              lowThreshold: 25.0,
-                              mediumThreshold: 37.0,
-                              highThreshold: 40.0,
-                            ),
-                          ],
+                          xAxisLabel: 'Metric',
+                          yAxisLabel: 'Staff Member',
                         ),
                       ),
                     ],
@@ -427,7 +408,7 @@ class _StaffDashboardState extends State<StaffDashboard> {
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 400,
-                        child: RadarChartWidget(
+                        child: RadarChartCustomWidget(
                           data: _selectedStaffIds.isEmpty ? [] : _selectedStaffIds.map((staffId) {
                             final staff = _staff.firstWhere((s) => s.id == staffId);
                             return [

@@ -456,7 +456,7 @@ class _ProductivityTabState extends State<ProductivityTab> {
             ),
           ] else ...[
             // Chart 1: MPOR Line Chart
-            LineChartWidget(
+            LineChartCustomWidget(
               data: [mporData],
               dateLabels: dateLabels,
               legendLabels: ['Daily MPOR', 'Moving Avg'],
@@ -472,7 +472,7 @@ class _ProductivityTabState extends State<ProductivityTab> {
             const SizedBox(height: 24),
 
             // Chart 2: Tasks Completed per Labor Hour
-            StackedBarWidget(
+            StackedBarChartWidget(
               data: tasksData,
               dateLabels: dateLabels,
               legendLabels: selectedDepartment == 'All Departments' 
@@ -487,7 +487,7 @@ class _ProductivityTabState extends State<ProductivityTab> {
             const SizedBox(height: 24),
 
             // Chart 3: Revenue per Labor Hour
-            LineChartWidget(
+            LineChartCustomWidget(
               data: [revenueData],
               dateLabels: dateLabels,
               legendLabels: ['Revenue per Labor Hour'],

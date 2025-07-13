@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
-class RateDonutWidget extends StatelessWidget {
+class DonutGaugeWidget extends StatelessWidget {
   final double value;
-  final String title;
   final double minValue;
   final double maxValue;
   final double startAngle;
@@ -12,14 +11,16 @@ class RateDonutWidget extends StatelessWidget {
   final Color? trackColor;
   final Color? valueColor;
   final double height;
-  final TextStyle? titleStyle;
-  final TextStyle? valueStyle;
   final EdgeInsets padding;
 
-  const RateDonutWidget({
+  final Widget Function(double value)? centerLabelBuilder;
+  final Widget? title;
+  final TextStyle? valueStyle;
+  final TextStyle? titleStyle;
+
+  const DonutGaugeWidget({
     Key? key,
     required this.value,
-    required this.title,
     this.minValue = 0.0,
     this.maxValue = 100.0,
     this.startAngle = 270,
@@ -28,12 +29,14 @@ class RateDonutWidget extends StatelessWidget {
     this.trackColor,
     this.valueColor,
     this.height = 200,
-    this.titleStyle,
-    this.valueStyle,
     this.padding = const EdgeInsets.all(20),
+    this.centerLabelBuilder,
+    this.title,
+    this.valueStyle,
+    this.titleStyle,
   }) : super(key: key);
 
-  Color _getThresholdColor(double value) {
+  Color _getDefaultColor(double value) {
     if (value > 95) return Colors.green[600]!;
     if (value >= 90) return Colors.amber[700]!;
     return Colors.red[600]!;
@@ -47,11 +50,10 @@ class RateDonutWidget extends StatelessWidget {
       child: Padding(
         padding: padding,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              title,
-              style: titleStyle ?? const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            if (title != null) title!,
+            if (title != null) const SizedBox(height: 16),
             SizedBox(
               height: height,
               child: SfRadialGauge(
@@ -73,7 +75,7 @@ class RateDonutWidget extends StatelessWidget {
                         value: value,
                         width: thickness,
                         sizeUnit: GaugeSizeUnit.factor,
-                        color: valueColor ?? _getThresholdColor(value),
+                        color: valueColor ?? _getDefaultColor(value),
                         cornerStyle: CornerStyle.bothCurve,
                       ),
                     ],
@@ -81,13 +83,14 @@ class RateDonutWidget extends StatelessWidget {
                       GaugeAnnotation(
                         angle: 90,
                         positionFactor: 0.0,
-                        widget: Text(
-                          '${value.toStringAsFixed(1)}%',
-                          style: valueStyle ?? const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        widget: centerLabelBuilder != null
+                            ? centerLabelBuilder!(value)
+                            : Text(
+                                '${value.toStringAsFixed(1)}%',
+                                style: valueStyle ??
+                                    const TextStyle(
+                                        fontSize: 24, fontWeight: FontWeight.bold),
+                              ),
                       ),
                     ],
                   ),
@@ -99,4 +102,4 @@ class RateDonutWidget extends StatelessWidget {
       ),
     );
   }
-} 
+}

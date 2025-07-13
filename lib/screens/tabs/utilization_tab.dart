@@ -101,7 +101,7 @@ class _UtilizationTabState extends State<UtilizationTab> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -262,9 +262,17 @@ class _UtilizationTabState extends State<UtilizationTab> {
             const SizedBox(height: 24),
 
             // Task Occupancy Rate (Donut/Circular Gauge)
-            RateDonutWidget(
+            DonutGaugeWidget(
               value: taskOccupancy,
-              title: 'Task Occupancy Rate',
+              title: Text(
+                'Task Occupancy Rate',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              padding: const EdgeInsets.all(24),
+              height: 200,
             ),
           ],
         ],
